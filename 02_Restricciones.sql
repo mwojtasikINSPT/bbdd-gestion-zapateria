@@ -29,7 +29,7 @@ ALTER TABLE detalle_compra
 -- producto.activo utiliza BOOLEAN NOT NULL DEFAULT TRUE en la estructura.sql
 
 ALTER TABLE producto
-  ADD CONSTRAINT chk_producto_precio CHECK (precio_actual >= 0);
+  ADD CONSTRAINT chk_producto_precio CHECK (precio_actual > 0);
 ALTER TABLE producto_talle
   ADD CONSTRAINT chk_producto_talle_numero CHECK (numero_calzado BETWEEN 16 AND 50),
   ADD CONSTRAINT chk_producto_talle_stock CHECK (stock >= 0);
@@ -49,7 +49,7 @@ ALTER TABLE detalle_venta
   ADD CONSTRAINT chk_detalle_venta_precio CHECK (precio_unitario_venta > 0);
 ALTER TABLE detalle_compra
   ADD CONSTRAINT chk_detalle_compra_cantidad CHECK (cantidad > 0),
-  ADD CONSTRAINT chk_detalle_compra_precio CHECK (precio_unitario_compra >= 0);
+  ADD CONSTRAINT chk_detalle_compra_precio CHECK (precio_unitario_compra > 0);
 ALTER TABLE pago_proveedor
   ADD CONSTRAINT chk_pago_proveedor_monto CHECK (monto > 0),
   ADD CONSTRAINT chk_pago_proveedor_medio_pago
