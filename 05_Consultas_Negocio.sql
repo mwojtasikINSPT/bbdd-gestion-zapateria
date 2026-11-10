@@ -275,7 +275,7 @@ ORDER BY
     v.id_venta,
     dt.id_detalle_venta;
 
--- Cantidad de ventas y total facturado durante el fin de semana
+-- Cantidad de ventas y total facturado durante un fin de semana
 SELECT
     COUNT(DISTINCT v.id_venta) AS cantidad_ventas,
     ROUND(
@@ -330,6 +330,46 @@ GROUP BY
 ORDER BY
     anio DESC,
     mes DESC;
+
+-- Productos que no se vendieron en un tiempo determinado
+SELECT
+    producto.id_producto,
+    producto.marca,
+    producto.modelo,
+    producto.color
+FROM
+    producto
+WHERE
+    producto.id_producto NOT IN (
+        SELECT DISTINCT -- Excluir productos vendidos durante fecha elegida
+            detalle_venta.id_producto
+        FROM
+            detalle_venta
+            JOIN venta ON detalle_venta.id_venta = venta.id_venta
+        WHERE
+            (
+                venta.fecha >= '2026-07-01' -- Modificar la fecha de inicio según el período deseado
+                AND venta.fecha < '2026-08-01' -- Modificar la fecha de fin según el período deseado
+            )
+    );
+
+-- Mostrar la marca, el modelo y el color de los productos que se vendieron durante Octubre de 2025, sin repetir productos
+SELECT DISTINCT
+    detalle_venta.id_producto,
+    producto.marca,
+    producto.modelo,
+    producto.color
+FROM
+    detalle_venta
+    JOIN venta ON detalle_venta.id_venta = venta.id_venta
+    JOIN producto ON detalle_venta.id_producto = producto.id_producto
+WHERE
+    (
+        venta.fecha >= '2025-10-01'
+        AND venta.fecha < '2025-11-01'
+    )
+ORDER BY
+    id_producto ASC;
 
 -- ----------------------------------------------
 -- CONSULTAS DE ANÁLISIS Y RENDIMIENTO COMERCIAL
@@ -393,6 +433,27 @@ GROUP BY
     u.rol
 ORDER BY
     total_facturado DESC;
+
+-- Facturación por vendedor en un período de tiempo específico
+SELECT
+    usuario.nombre_usuario,
+    SUM(
+        detalle_venta.cantidad * detalle_venta.precio_unitario_venta
+    ) AS ventas_sin_desc
+FROM
+    usuario
+    JOIN venta ON usuario.id_usuario = venta.id_usuario
+    JOIN detalle_venta ON detalle_venta.id_venta = venta.id_venta
+WHERE
+    usuario.rol = 'VENDEDOR'
+    AND venta.fecha >= '2026-07-01' -- Modificar la fecha de inicio según el período deseado
+    AND venta.fecha < '2026-08-01' -- Modificar la fecha de fin según el período deseado
+GROUP BY
+    usuario.id_usuario
+HAVING
+    ventas_sin_desc > 1100000
+ORDER BY
+    ventas_sin_desc DESC;
 
 -- Rentabilidad estimada por producto
 SELECT
@@ -539,3 +600,22 @@ SELECT
         ),
         2
     ) AS deuda_total_proveedores;
+
+-- Pago a proveedores por proveedor por mes y año cuyo monto total pagado sea mayor a 200000
+SELECT
+    YEAR (pago_proveedor.fecha) AS anio,
+    MONTH (pago_proveedor.fecha) as mes,
+    proveedor.nombre,
+    SUM(pago_proveedor.monto) AS total_pagado
+FROM
+    pago_proveedor
+    JOIN proveedor ON proveedor.id_proveedor = pago_proveedor.id_proveedor
+GROUP BY
+    proveedor.id_proveedor,
+    anio,
+    mes -- uso id por si dos prov tienen el mismo nombre 
+HAVING
+    total_pagado > 200000 -- cambiar el monto según lo que se quiera filtrar
+ORDER BY
+    anio,
+    mes
