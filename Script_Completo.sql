@@ -246,6 +246,7 @@ CREATE INDEX idx_usuario_rol_activo ON usuario(rol, activo);
 -- 4: venta INSERT: Descuenta stock si hay disponible, sino da error.
 -- 5: venta UPDATE: Ajusta stock al cambiar cantidad o producto/talle.
 -- 6: venta DELETE: Devuelve al stock las unidades de una venta anulada.
+-- 7: venta INSERT: Asigna el precio unitario actual del producto.
 -- ============================================================================
 USE gestion_zapateria;
 DELIMITER $$
@@ -434,6 +435,20 @@ BEGIN
        SET stock = stock + OLD.cantidad
      WHERE id_producto = OLD.id_producto
        AND numero_calzado = OLD.numero_calzado;
+END$$
+
+
+-- [7] PRECIO UNITARIO ACTUAL DE VENTA
+-- Al registrar un detalle de venta, se toma el precio actual del producto.
+CREATE TRIGGER trg_detalle_venta_precio
+BEFORE INSERT ON detalle_venta
+FOR EACH ROW
+BEGIN
+    SET NEW.precio_unitario_venta = (
+        SELECT precio_actual
+        FROM producto
+        WHERE id_producto = NEW.id_producto
+    );
 END$$
 
 DELIMITER ;
